@@ -10,6 +10,8 @@
 
 This checklist tracks actionable refactoring tasks for the API controllers and related code in the Order Management System. For this 2–3 hour session, the focus is on the ProductsController and related logic only. All other items are moved to a 'Future Refactoring' section.
 
+> **Note:** The OrdersController refactor introduces a greater number of dedicated DTOs (request/response types) compared to the ProductsController refactor. This is due to the increased complexity and variety of data flows in order management (e.g., order creation, invoice, reporting), whereas the ProductsController required only minimal DTOs for its simpler contract.
+
 ---
 
 ## 🚩 Refactoring Focus: All Controllers (2–3 hour session)

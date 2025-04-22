@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using OrderManagementSystem.API.Models;
+using OrderManagementSystem.API.DTOs;
 using Xunit;
 
 namespace OrderManagementSystem.Tests
@@ -45,12 +46,12 @@ namespace OrderManagementSystem.Tests
             Assert.NotNull(prod1);
             Assert.NotNull(prod2);
 
-            var orderRequest = new
+            var orderRequest = new OrderCreateRequestDto
             {
-                items = new[]
+                Items = new List<OrderItemDto>
                 {
-                    new { productId = prod1.Id, quantity = 2 },
-                    new { productId = prod2.Id, quantity = 3 }
+                    new OrderItemDto { ProductId = prod1.Id, Quantity = 2 },
+                    new OrderItemDto { ProductId = prod2.Id, Quantity = 3 }
                 }
             };
 
@@ -83,7 +84,7 @@ namespace OrderManagementSystem.Tests
         {
             await CleanupDatabaseAsync();
             var client = _factory.CreateClient();
-            var orderRequest = new { items = new object[] { } };
+            var orderRequest = new OrderCreateRequestDto { Items = new List<OrderItemDto>() };
             var response = await client.PostAsJsonAsync("/api/orders", orderRequest);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -93,7 +94,7 @@ namespace OrderManagementSystem.Tests
         {
             await CleanupDatabaseAsync();
             var client = _factory.CreateClient();
-            var orderRequest = new { items = new[] { new { quantity = 2 } } };
+            var orderRequest = new OrderCreateRequestDto { Items = new List<OrderItemDto> { new OrderItemDto { Quantity = 2 } } };
             var response = await client.PostAsJsonAsync("/api/orders", orderRequest);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -108,7 +109,7 @@ namespace OrderManagementSystem.Tests
             Assert.Equal(HttpStatusCode.Created, productResp.StatusCode);
             var product = await productResp.Content.ReadFromJsonAsync<Product>();
             Assert.NotNull(product);
-            var orderRequest = new { items = new[] { new { productId = product.Id } } };
+            var orderRequest = new OrderCreateRequestDto { Items = new List<OrderItemDto> { new OrderItemDto { ProductId = product.Id } } };
             var response = await client.PostAsJsonAsync("/api/orders", orderRequest);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -125,7 +126,7 @@ namespace OrderManagementSystem.Tests
             Assert.Equal(HttpStatusCode.Created, productResp.StatusCode);
             var product = await productResp.Content.ReadFromJsonAsync<Product>();
             Assert.NotNull(product);
-            var orderRequest = new { items = new[] { new { productId = product.Id, quantity } } };
+            var orderRequest = new OrderCreateRequestDto { Items = new List<OrderItemDto> { new OrderItemDto { ProductId = product.Id, Quantity = quantity } } };
             var response = await client.PostAsJsonAsync("/api/orders", orderRequest);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -135,7 +136,7 @@ namespace OrderManagementSystem.Tests
         {
             await CleanupDatabaseAsync();
             var client = _factory.CreateClient();
-            var orderRequest = new { items = new[] { new { } } };
+            var orderRequest = new OrderCreateRequestDto { Items = new List<OrderItemDto> { new OrderItemDto() } };
             var response = await client.PostAsJsonAsync("/api/orders", orderRequest);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -393,7 +394,7 @@ namespace OrderManagementSystem.Tests
         {
             await CleanupDatabaseAsync();
             var client = _factory.CreateClient();
-            var orderRequest = new { items = (object)null };
+            var orderRequest = new OrderCreateRequestDto { Items = null };
             var response = await client.PostAsJsonAsync("/api/orders", orderRequest);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             var content = await response.Content.ReadAsStringAsync();
