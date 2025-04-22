@@ -10,18 +10,13 @@ namespace OrderManagementSystem.API
     /// and returns a 400 Bad Request with a descriptive error message. This ensures that domain validation
     /// errors are translated into proper HTTP responses instead of unhandled exceptions.
     /// </summary>
-    public class ArgumentExceptionMiddleware
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="ArgumentExceptionMiddleware"/> class.
+    /// </remarks>
+    /// <param name="next">The next middleware in the pipeline.</param>
+    public class ArgumentExceptionMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ArgumentExceptionMiddleware"/> class.
-        /// </summary>
-        /// <param name="next">The next middleware in the pipeline.</param>
-        public ArgumentExceptionMiddleware(RequestDelegate next)
-        {
-            _next = next;
-        }
+        private readonly RequestDelegate _next = next;
 
         /// <summary>
         /// Invokes the middleware to catch ArgumentException and return a 400 Bad Request.
@@ -37,7 +32,7 @@ namespace OrderManagementSystem.API
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync($"{{\"error\":\"{ex.Message.Replace("\"", "'" )}\"}}");
+                await context.Response.WriteAsync($"{{\"error\":\"{ex.Message.Replace("\"", "'")}\"}}");
             }
         }
     }

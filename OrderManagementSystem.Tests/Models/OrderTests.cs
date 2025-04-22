@@ -39,7 +39,7 @@ namespace OrderManagementSystem.Tests.Models
         public void Order_CanBeCreated_WithDiscountThresholdEdgeCases()
         {
             var discounted = new Product { Name = "Discounted", Price = 100m, DiscountPercentage = 20m, DiscountQuantityThreshold = 2 };
-            var normal = new Product { Name = "Normal", Price = 50m };
+            _ = new Product { Name = "Normal", Price = 50m };
 
             // Below threshold
             var below = new List<(Product, int)> { (discounted, 1) };

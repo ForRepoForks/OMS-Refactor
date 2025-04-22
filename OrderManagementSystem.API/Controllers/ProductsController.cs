@@ -8,14 +8,9 @@ namespace OrderManagementSystem.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ProductsController : ControllerBase
+    public class ProductsController(OrderManagementContext context) : ControllerBase
     {
-        private readonly OrderManagementContext _context;
-
-        public ProductsController(OrderManagementContext context)
-        {
-            _context = context;
-        }
+        private readonly OrderManagementContext _context = context;
 
         [HttpPost]
         public async Task<ActionResult<Product>> CreateProduct(Product product)
@@ -38,33 +33,33 @@ namespace OrderManagementSystem.API.Controllers
         }
 
         [HttpGet]
-public async Task<ActionResult<PagedResult<Product>>> GetProducts(
+        public async Task<ActionResult<PagedResult<Product>>> GetProducts(
     [FromQuery] string? name,
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 10)
-{
-    if (page < 1 || pageSize < 1 || pageSize > 100)
-        return BadRequest("Invalid pagination parameters.");
+        {
+            if (page < 1 || pageSize < 1 || pageSize > 100)
+                return BadRequest("Invalid pagination parameters.");
 
-    var query = _context.Products.AsQueryable();
-    if (!string.IsNullOrWhiteSpace(name))
-    {
-        query = query.Where(p => p.Name.ToLower().Contains(name.ToLower()));
-    }
-    var totalCount = await query.CountAsync();
-    var products = await query
-        .Skip((page - 1) * pageSize)
-        .Take(pageSize)
-        .ToListAsync();
-    var result = new PagedResult<Product>
-    {
-        Items = products,
-        TotalCount = totalCount,
-        Page = page,
-        PageSize = pageSize
-    };
-    return Ok(result);
-}
+            var query = _context.Products.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                query = query.Where(p => p.Name.ToLower().Contains(name.ToLower()));
+            }
+            var totalCount = await query.CountAsync();
+            var products = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            var result = new PagedResult<Product>
+            {
+                Items = products,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
+            return Ok(result);
+        }
 
         [HttpPut("{id}/discount")]
         public async Task<ActionResult<Product>> ApplyDiscount(int id, [FromBody] DiscountDto discount)

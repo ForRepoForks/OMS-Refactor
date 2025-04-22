@@ -11,8 +11,8 @@ namespace OrderManagementSystem.API
 
             // Add services to the container.
             builder.Services.AddAuthorization();
-    builder.Services.AddDbContext<OrderManagementSystem.API.Data.OrderManagementContext>(options =>
-        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddDbContext<OrderManagementSystem.API.Data.OrderManagementContext>(options =>
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();

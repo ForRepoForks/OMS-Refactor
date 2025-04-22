@@ -9,14 +9,9 @@ using Xunit;
 
 namespace OrderManagementSystem.Tests
 {
-    public class OrderApiTests : IClassFixture<WebApplicationFactory<OrderManagementSystem.API.Program>>
+    public class OrderApiTests(WebApplicationFactory<OrderManagementSystem.API.Program> factory) : IClassFixture<WebApplicationFactory<OrderManagementSystem.API.Program>>
     {
-        private readonly WebApplicationFactory<OrderManagementSystem.API.Program> _factory;
-
-        public OrderApiTests(WebApplicationFactory<OrderManagementSystem.API.Program> factory)
-        {
-            _factory = factory;
-        }
+        private readonly WebApplicationFactory<OrderManagementSystem.API.Program> _factory = factory;
 
         private async Task CleanupDatabaseAsync()
         {
@@ -83,7 +78,7 @@ namespace OrderManagementSystem.Tests
         {
             await CleanupDatabaseAsync();
             var client = _factory.CreateClient();
-            var orderRequest = new { items = new object[] { } };
+            var orderRequest = new { items = Array.Empty<object>() };
             var response = await client.PostAsJsonAsync("/api/orders", orderRequest);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -156,7 +151,7 @@ namespace OrderManagementSystem.Tests
         public class OrderResponse
         {
             public int Id { get; set; }
-            public List<OrderItemResponse> Items { get; set; } = new();
+            public List<OrderItemResponse> Items { get; set; } = [];
         }
         public class OrderItemResponse
         {
@@ -244,7 +239,7 @@ namespace OrderManagementSystem.Tests
 
         public class OrderInvoiceResponse
         {
-            public List<OrderInvoiceProduct> Products { get; set; } = new();
+            public List<OrderInvoiceProduct> Products { get; set; } = [];
             public decimal TotalAmount { get; set; }
         }
         public class OrderInvoiceProduct
