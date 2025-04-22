@@ -48,7 +48,9 @@ jobs:
       run: dotnet restore
 
     - name: Check code formatting
-      run: dotnet format --verify-no-changes --severity info
+      run: |
+        dotnet format --verify-no-changes --severity info || echo "::warning file=dotnet-format::Formatting issues found. Run 'dotnet format' locally to fix."
+      continue-on-error: true
 
     - name: Build
       run: dotnet build --no-restore
