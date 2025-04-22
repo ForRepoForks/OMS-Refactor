@@ -8,45 +8,37 @@
 >
 > **Code Style:** Always use automatic code formatting tools (e.g., `dotnet format`, IDE format-on-save) to maintain code style consistency.
 
-This checklist tracks actionable refactoring tasks for the API controllers and related code in the Order Management System. Check off items as you complete them.
+This checklist tracks actionable refactoring tasks for the API controllers and related code in the Order Management System. For this 2–3 hour session, the focus is on the ProductsController and related logic only. All other items are moved to a 'Future Refactoring' section.
 
 ---
 
-## ProductsController
-- [ ] Extract business logic (e.g., discount validation, product creation) into a `ProductService`
-- [ ] Move DTOs (e.g., `DiscountDto`) to dedicated files/folders
-- [ ] Replace direct data access (`_context`) with service/repository abstraction
-- [ ] Improve model validation (add granular error messages, consider custom validation attributes)
-- [ ] Introduce request/response DTOs for clarity
-- [ ] Standardize error responses (use a common error format)
-- [ ] Remove exception-throwing property setters from models (use data annotations instead)
-- [ ] Add/clarify API documentation (Swagger annotations, summaries)
-- [ ] Add a dedicated endpoint or clear flag for removing discounts (avoid using zero values for this)
-- [ ] Validate/sanitize input for product name search (length, characters)
+## 🚩 Refactoring Focus: All Controllers (2–3 hour session)
 
-## OrdersController
-- [ ] Extract business logic (order creation, invoice calculation, discount application, report generation) into an `OrderService`
-- [ ] Move nested DTO classes to separate files for maintainability
-- [ ] Replace direct data access (`_context`) with service/repository abstraction
-- [ ] Improve and extract validation logic for reuse and clarity
-- [ ] Consider moving the report endpoint to a dedicated `ReportsController` for SRP
-- [ ] Refactor discounted product report to avoid N+1 query problem (use a single query with GROUP BY/JOIN)
-- [ ] Standardize error responses (use a common error format)
-- [ ] Add/clarify API documentation (Swagger annotations, summaries)
-- [ ] Add API versioning to routes (e.g., `/api/v1/orders`)
+### Goal
+- Address the most critical maintainability, testability, and correctness issues in all controllers (ProductsController, OrdersController) within 2–3 hours. Prioritize high-impact, cross-cutting improvements over exhaustive detail.
 
-## Data & Models
-- [ ] Remove exception-throwing property setters (e.g., `Product.Price`), use data annotations or custom validation attributes
-- [ ] Review navigation properties and constructors for clarity and safety
+### Actionable Tasks
+- [ ] Write or update tests for critical controller logic (TDD-first)
+- [ ] Move obvious business logic from controllers into service classes (e.g., ProductService, OrderService)
+- [ ] Move direct data access out of controllers and into services
+- [ ] Move key DTOs out of controllers and into dedicated files
+- [ ] Standardize validation and error handling (use data annotations/validators, unified error responses)
+- [ ] Add basic input sanitization for user-facing endpoints (e.g., product search, order creation)
 
-## General Codebase
-- [ ] Add/expand unit and integration tests for new service layers and validation logic
-- [ ] Review and update API documentation (Swagger annotations, summaries)
-- [ ] Ensure EF Core migrations are updated and reflect all model changes
-- [ ] Standardize error responses across all endpoints
-- [ ] Add input sanitization and validation for all user inputs
-- [ ] Implement or document test isolation (unique DB per test, cleanup, or test containers)
-- [ ] Ensure Docker Compose applies EF Core migrations on startup (avoid schema drift)
+---
+
+## ⏳ Future Refactoring (after this session)
+
+- Refactor OrdersController and reporting logic
+- Move all order-related DTOs to dedicated files
+- Centralize and standardize validation & error handling for all endpoints
+- Refactor discounted product report for query efficiency
+- Implement robust test isolation for the entire test suite
+- Add API versioning to all routes
+- Ensure all endpoints have clear Swagger/OpenAPI documentation and XML summaries
+- Review navigation properties and constructors in all models
+- Ensure EF Core migrations are always up-to-date and automate migration application on startup
+- Add or enforce code formatting configuration (e.g., `.editorconfig`, `dotnet format`)
 
 ---
 
