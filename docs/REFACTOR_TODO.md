@@ -20,12 +20,16 @@ This checklist tracks actionable refactoring tasks for the API controllers and r
 - Address the most critical maintainability, testability, and correctness issues in all controllers (ProductsController, OrdersController) within 2–3 hours. Prioritize high-impact, cross-cutting improvements over exhaustive detail.
 
 ### Actionable Tasks
-- [ ] Write or update tests for critical controller logic (TDD-first)
-- [ ] Move obvious business logic from controllers into service classes (e.g., ProductService, OrderService)
-- [ ] Move direct data access out of controllers and into services
-- [ ] Move key DTOs out of controllers and into dedicated files
-- [ ] Standardize validation and error handling (use data annotations/validators, unified error responses)
-- [ ] Add basic input sanitization for user-facing endpoints (e.g., product search, order creation)
+- [x] Write or update tests for critical controller logic (TDD-first)
+- [x] Move obvious business logic from controllers into service classes (e.g., ProductService, OrderService)
+- [x] Move key DTOs out of controllers and into dedicated files
+- [x] Standardize validation and error handling (use data annotations/validators, unified error responses)
+- [x] Add basic input sanitization for user-facing endpoints (e.g., product search, order creation)
+- [ ] Move direct data access out of controllers and into services (optional, see below)
+
+**Status:**
+- OrdersController fully refactored: thin controller, business logic in OrderService, all DTOs in dedicated files, TDD followed, all tests passing.
+- ProductsController refactored: business logic in ProductService, DTOs for input, thin/testable controller. Remaining direct data access and output DTO use are optional improvements.
 
 ---
 
@@ -34,6 +38,14 @@ This checklist tracks actionable refactoring tasks for the API controllers and r
 ### ProductsController – Minor Opportunities (Optional)
 - The controller still uses the domain entity `Product` as the response type. For strict separation, you may wish to introduce a `ProductResponseDto` for output, but this is not strictly required unless you want to shield your API from domain changes.
 - The controller directly accesses `_context` for queries and persistence. For full service encapsulation, you could move all data access into `IProductService` (not just business logic), but for simple CRUD this is often acceptable.
+
+### OrdersController – Status
+- ✅ All business logic moved to OrderService
+- ✅ All DTOs in dedicated files
+- ✅ Controller uses only shared DTOs for input/output
+- ✅ No nested DTOs remain
+- ✅ Thin controller: only HTTP validation and response mapping
+- ✅ All tests are passing (TDD followed)
 
 - Refactor OrdersController and reporting logic
 - Move all order-related DTOs to dedicated files
