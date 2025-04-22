@@ -11,15 +11,20 @@ namespace OrderManagementSystem.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class OrdersController(OrderManagementContext context) : ControllerBase
+    public class OrdersController : ControllerBase
     {
-        private readonly OrderManagementContext _context = context;
+        private readonly OrderManagementContext _context;
+
+        public OrdersController(OrderManagementContext context)
+        {
+            _context = context;
+        }
 
         public class CreateOrderRequest
         {
             [Required]
             [MinLength(1, ErrorMessage = "At least one item is required.")]
-            public List<OrderItemDto> Items { get; set; } = [];
+            public List<OrderItemDto> Items { get; set; } = new();
         }
         public class OrderItemDto
         {
@@ -31,7 +36,7 @@ namespace OrderManagementSystem.API.Controllers
         public class OrderResponse
         {
             public int Id { get; set; }
-            public List<OrderItemResponse> Items { get; set; } = [];
+            public List<OrderItemResponse> Items { get; set; } = new();
         }
         public class OrderItemResponse
         {
@@ -85,39 +90,39 @@ namespace OrderManagementSystem.API.Controllers
             var response = new OrderResponse
             {
                 Id = order.Id,
-                Items = [.. order.Items.Select(i => new OrderItemResponse { ProductId = i.ProductId, Quantity = i.Quantity })]
+                Items = order.Items.Select(i => new OrderItemResponse { ProductId = i.ProductId, Quantity = i.Quantity }).ToList()
             };
             return CreatedAtAction(nameof(CreateOrder), new { id = order.Id }, response);
         }
 
         [HttpGet]
-        public async Task<ActionResult<PagedResult<OrderResponse>>> GetOrders(
+public async Task<ActionResult<PagedResult<OrderResponse>>> GetOrders(
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 10)
-        {
-            if (page < 1 || pageSize < 1 || pageSize > 100)
-                return BadRequest("Invalid pagination parameters.");
+{
+    if (page < 1 || pageSize < 1 || pageSize > 100)
+        return BadRequest("Invalid pagination parameters.");
 
-            var query = _context.Orders.Include(o => o.Items).AsQueryable();
-            var totalCount = await query.CountAsync();
-            var orders = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-            var response = orders.Select(order => new OrderResponse
-            {
-                Id = order.Id,
-                Items = [.. order.Items.Select(i => new OrderItemResponse { ProductId = i.ProductId, Quantity = i.Quantity })]
-            }).ToList();
-            var result = new PagedResult<OrderResponse>
-            {
-                Items = response,
-                TotalCount = totalCount,
-                Page = page,
-                PageSize = pageSize
-            };
-            return Ok(result);
-        }
+    var query = _context.Orders.Include(o => o.Items).AsQueryable();
+    var totalCount = await query.CountAsync();
+    var orders = await query
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+    var response = orders.Select(order => new OrderResponse
+    {
+        Id = order.Id,
+        Items = order.Items.Select(i => new OrderItemResponse { ProductId = i.ProductId, Quantity = i.Quantity }).ToList()
+    }).ToList();
+    var result = new PagedResult<OrderResponse>
+    {
+        Items = response,
+        TotalCount = totalCount,
+        Page = page,
+        PageSize = pageSize
+    };
+    return Ok(result);
+}
         [HttpGet("{id}/invoice")]
         public async Task<IActionResult> GetOrderInvoice(int id)
         {
@@ -160,7 +165,7 @@ namespace OrderManagementSystem.API.Controllers
 
         public class InvoiceResponseDto
         {
-            public List<InvoiceProductDto> Products { get; set; } = [];
+            public List<InvoiceProductDto> Products { get; set; } = new();
             public decimal TotalAmount { get; set; }
         }
         public class InvoiceProductDto

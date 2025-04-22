@@ -11,7 +11,7 @@ namespace OrderManagementSystem.API.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation property
-        public List<OrderItem> Items { get; set; } = [];
+        public List<OrderItem> Items { get; set; } = new();
 
         public Order() { }
 
@@ -19,7 +19,7 @@ namespace OrderManagementSystem.API.Models
         {
             if (items == null || !items.Any())
                 throw new ArgumentException("Order must have at least one product.", nameof(items));
-            Items = [.. items.Select(i => new OrderItem { Product = i.product, Quantity = i.quantity })];
+            Items = items.Select(i => new OrderItem { Product = i.product, Quantity = i.quantity }).ToList();
         }
     }
 

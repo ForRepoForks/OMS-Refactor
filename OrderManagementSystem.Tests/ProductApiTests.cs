@@ -8,7 +8,7 @@ using Xunit;
 
 namespace OrderManagementSystem.Tests
 {
-    public class ProductApiTests(WebApplicationFactory<OrderManagementSystem.API.Program> factory) : IClassFixture<WebApplicationFactory<OrderManagementSystem.API.Program>>
+    public class ProductApiTests : IClassFixture<WebApplicationFactory<OrderManagementSystem.API.Program>>
     {
         private async Task CleanupDatabaseAsync()
         {
@@ -54,7 +54,12 @@ namespace OrderManagementSystem.Tests
             Assert.Equal(HttpStatusCode.BadRequest, discountResponse.StatusCode);
         }
 
-        private readonly WebApplicationFactory<OrderManagementSystem.API.Program> _factory = factory;
+        private readonly WebApplicationFactory<OrderManagementSystem.API.Program> _factory;
+
+        public ProductApiTests(WebApplicationFactory<OrderManagementSystem.API.Program> factory)
+        {
+            _factory = factory;
+        }
 
         [Fact]
         public async Task CreateProduct_ReturnsCreatedProduct()
@@ -193,7 +198,7 @@ namespace OrderManagementSystem.Tests
             var paged = await response.Content.ReadFromJsonAsync<PagedResult<Product>>();
             Assert.NotNull(paged);
             Assert.NotNull(paged.Items);
-            Assert.All(paged.Items, p => Assert.True(p.Name.Contains("Apple", System.StringComparison.OrdinalIgnoreCase)));
+            Assert.All(paged.Items, p => Assert.True(p.Name.IndexOf("Apple", System.StringComparison.OrdinalIgnoreCase) >= 0));
             Assert.Contains(paged.Items, p => p.Name == "Apple");
             Assert.Contains(paged.Items, p => p.Name == "Green Apple");
             Assert.Contains(paged.Items, p => p.Name == "Pineapple");
