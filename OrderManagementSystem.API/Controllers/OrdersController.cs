@@ -96,33 +96,33 @@ namespace OrderManagementSystem.API.Controllers
         }
 
         [HttpGet]
-public async Task<ActionResult<PagedResult<OrderResponse>>> GetOrders(
+        public async Task<ActionResult<PagedResult<OrderResponse>>> GetOrders(
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 10)
-{
-    if (page < 1 || pageSize < 1 || pageSize > 100)
-        return BadRequest("Invalid pagination parameters.");
+        {
+            if (page < 1 || pageSize < 1 || pageSize > 100)
+                return BadRequest("Invalid pagination parameters.");
 
-    var query = _context.Orders.Include(o => o.Items).AsQueryable();
-    var totalCount = await query.CountAsync();
-    var orders = await query
-        .Skip((page - 1) * pageSize)
-        .Take(pageSize)
-        .ToListAsync();
-    var response = orders.Select(order => new OrderResponse
-    {
-        Id = order.Id,
-        Items = order.Items.Select(i => new OrderItemResponse { ProductId = i.ProductId, Quantity = i.Quantity }).ToList()
-    }).ToList();
-    var result = new PagedResult<OrderResponse>
-    {
-        Items = response,
-        TotalCount = totalCount,
-        Page = page,
-        PageSize = pageSize
-    };
-    return Ok(result);
-}
+            var query = _context.Orders.Include(o => o.Items).AsQueryable();
+            var totalCount = await query.CountAsync();
+            var orders = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            var response = orders.Select(order => new OrderResponse
+            {
+                Id = order.Id,
+                Items = order.Items.Select(i => new OrderItemResponse { ProductId = i.ProductId, Quantity = i.Quantity }).ToList()
+            }).ToList();
+            var result = new PagedResult<OrderResponse>
+            {
+                Items = response,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
+            return Ok(result);
+        }
         [HttpGet("{id}/invoice")]
         public async Task<IActionResult> GetOrderInvoice(int id)
         {
