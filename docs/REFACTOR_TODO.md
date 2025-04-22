@@ -31,6 +31,10 @@ This checklist tracks actionable refactoring tasks for the API controllers and r
 
 ## ⏳ Future Refactoring (after this session)
 
+### ProductsController – Minor Opportunities (Optional)
+- The controller still uses the domain entity `Product` as the response type. For strict separation, you may wish to introduce a `ProductResponseDto` for output, but this is not strictly required unless you want to shield your API from domain changes.
+- The controller directly accesses `_context` for queries and persistence. For full service encapsulation, you could move all data access into `IProductService` (not just business logic), but for simple CRUD this is often acceptable.
+
 - Refactor OrdersController and reporting logic
 - Move all order-related DTOs to dedicated files
 - Centralize and standardize validation & error handling for all endpoints

@@ -3,9 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using OrderManagementSystem.API.Data;
 using OrderManagementSystem.API.Models;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using OrderManagementSystem.API.Services;
+using OrderManagementSystem.API.DTOs;
 
 namespace OrderManagementSystem.API.Controllers
 {
@@ -13,90 +14,40 @@ namespace OrderManagementSystem.API.Controllers
     [Route("api/[controller]")]
     public class OrdersController : ControllerBase
     {
+        private readonly IOrderService _orderService;
         private readonly OrderManagementContext _context;
 
-        public OrdersController(OrderManagementContext context)
+        public OrdersController(IOrderService orderService, OrderManagementContext context)
         {
+            _orderService = orderService;
             _context = context;
         }
 
-        public class CreateOrderRequest
-        {
-            [Required]
-            [MinLength(1, ErrorMessage = "At least one item is required.")]
-            public List<OrderItemDto> Items { get; set; } = new();
-        }
-        public class OrderItemDto
-        {
-            [Required]
-            public int ProductId { get; set; }
-            [Range(1, int.MaxValue, ErrorMessage = "Quantity must be at least 1.")]
-            public int Quantity { get; set; }
-        }
-        public class OrderResponse
-        {
-            public int Id { get; set; }
-            public List<OrderItemResponse> Items { get; set; } = new();
-        }
-        public class OrderItemResponse
-        {
-            public int ProductId { get; set; }
-            public int Quantity { get; set; }
-        }
 
         [HttpPost]
-        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
+        public async Task<IActionResult> CreateOrder([FromBody] OrderCreateRequestDto request)
         {
             if (!ModelState.IsValid || request.Items == null || request.Items.Count == 0)
                 return BadRequest(ModelState);
 
-            // Additional validation: ensure all items have both ProductId and Quantity set
-            foreach (var item in request.Items)
+            var (result, error) = await _orderService.CreateOrderAsync(request.Items);
+            if (error != null)
             {
-                // ProductId is required (should not be 0 or default)
-                // Quantity is required and must be >= 1
-                if (item == null || item.ProductId == 0 || item.Quantity < 1)
-                {
-                    // Add model errors for clarity (optional)
-                    if (item == null)
-                        ModelState.AddModelError("Items", "Order item cannot be null.");
-                    else
-                    {
-                        if (item.ProductId == 0)
-                            ModelState.AddModelError("Items.ProductId", "ProductId is required and must be greater than 0.");
-                        if (item.Quantity < 1)
-                            ModelState.AddModelError("Items.Quantity", "Quantity must be at least 1.");
-                    }
-                    return BadRequest(ModelState);
-                }
+                if (error.Contains("not found", System.StringComparison.OrdinalIgnoreCase))
+                    return NotFound(error);
+                ModelState.AddModelError("Order", error);
+                return BadRequest(ModelState);
             }
-
-            // Validate all product IDs
-            var productIds = request.Items.Select(i => i.ProductId).Distinct().ToList();
-            var products = await _context.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
-            if (products.Count != productIds.Count)
-                return NotFound("One or more products not found.");
-
-            // Map items
-            var order = new Order();
-            foreach (var item in request.Items)
+            var response = new OrderResponseDto
             {
-                var product = products.First(p => p.Id == item.ProductId);
-                order.Items.Add(new OrderItem { Product = product, ProductId = product.Id, Quantity = item.Quantity });
-            }
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
-
-            var response = new OrderResponse
-            {
-                Id = order.Id,
-                Items = order.Items.Select(i => new OrderItemResponse { ProductId = i.ProductId, Quantity = i.Quantity }).ToList()
+                Id = result.Id,
+                Items = result.Items.Select(i => new OrderItemResponseDto { ProductId = i.ProductId, Quantity = i.Quantity }).ToList()
             };
-            return CreatedAtAction(nameof(CreateOrder), new { id = order.Id }, response);
+            return CreatedAtAction(nameof(CreateOrder), new { id = response.Id }, response);
         }
 
         [HttpGet]
-        public async Task<ActionResult<PagedResult<OrderResponse>>> GetOrders(
+        public async Task<ActionResult<PagedResult<OrderResponseDto>>> GetOrders(
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 10)
         {
@@ -109,14 +60,18 @@ namespace OrderManagementSystem.API.Controllers
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
-            var response = orders.Select(order => new OrderResponse
+
+            var result = new PagedResult<OrderResponseDto>
             {
-                Id = order.Id,
-                Items = order.Items.Select(i => new OrderItemResponse { ProductId = i.ProductId, Quantity = i.Quantity }).ToList()
-            }).ToList();
-            var result = new PagedResult<OrderResponse>
-            {
-                Items = response,
+                Items = orders.Select(o => new OrderResponseDto
+                {
+                    Id = o.Id,
+                    Items = o.Items.Select(i => new OrderItemResponseDto
+                    {
+                        ProductId = i.ProductId,
+                        Quantity = i.Quantity
+                    }).ToList()
+                }).ToList(),
                 TotalCount = totalCount,
                 Page = page,
                 PageSize = pageSize
@@ -170,7 +125,7 @@ namespace OrderManagementSystem.API.Controllers
         }
         public class InvoiceProductDto
         {
-            public string ProductName { get; set; }
+            public string ProductName { get; set; } = string.Empty;
             public int Quantity { get; set; }
             public decimal DiscountPercent { get; set; }
             public decimal Amount { get; set; }
@@ -188,7 +143,7 @@ namespace OrderManagementSystem.API.Controllers
             {
                 // Find all order items where this product was ordered with quantity >= threshold
                 var orderItems = await _context.OrderItems
-                    .Where(oi => oi.ProductId == product.Id && oi.Quantity >= product.DiscountQuantityThreshold)
+                    .Where(oi => oi.ProductId == product.Id && product.DiscountQuantityThreshold != null && oi.Quantity >= product.DiscountQuantityThreshold.Value)
                     .ToListAsync();
                 if (orderItems.Count == 0)
                     continue;
@@ -207,7 +162,7 @@ namespace OrderManagementSystem.API.Controllers
 
         public class DiscountedProductReportItem
         {
-            public string ProductName { get; set; }
+            public string ProductName { get; set; } = string.Empty;
             public decimal DiscountPercent { get; set; }
             public int NumberOfOrders { get; set; }
             public decimal TotalAmount { get; set; }

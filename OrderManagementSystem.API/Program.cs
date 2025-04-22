@@ -15,6 +15,7 @@ namespace OrderManagementSystem.API
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddScoped<OrderManagementSystem.API.Services.IProductService, OrderManagementSystem.API.Services.ProductService>();
+            builder.Services.AddScoped<OrderManagementSystem.API.Services.IOrderService, OrderManagementSystem.API.Services.OrderService>();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
