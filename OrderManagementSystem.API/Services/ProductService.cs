@@ -4,10 +4,10 @@ using OrderManagementSystem.API.Models;
 
 namespace OrderManagementSystem.API.Services
 {
-    public class ProductService
+    public class ProductService : IProductService
     {
-        private readonly object _context;
-        public ProductService(object context)
+        private readonly OrderManagementSystem.API.Data.OrderManagementContext _context;
+        public ProductService(OrderManagementSystem.API.Data.OrderManagementContext context)
         {
             _context = context;
         }
@@ -36,6 +36,36 @@ namespace OrderManagementSystem.API.Services
             product.DiscountPercentage = discount.Percentage;
             product.DiscountQuantityThreshold = discount.QuantityThreshold;
             return Task.CompletedTask;
+        }
+
+        public Task<Product> CreateProductAsync(ProductCreateDto dto)
+        {
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
+
+            // Name validation
+            var name = dto.Name;
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ValidationException("Product name is required.");
+            name = name.Trim();
+            const int maxNameLength = 256; // Adjust if your model is different
+            if (name.Length > maxNameLength)
+                throw new ValidationException($"Product name must be at most {maxNameLength} characters.");
+
+            // Price validation
+            if (dto.Price <= 0)
+                throw new ValidationException("Product price must be positive.");
+
+            // Construct Product and catch model-level exceptions
+            try
+            {
+                var product = new Product { Name = name, Price = dto.Price };
+                return Task.FromResult(product);
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ValidationException(ex.Message, ex);
+            }
         }
     }
 }

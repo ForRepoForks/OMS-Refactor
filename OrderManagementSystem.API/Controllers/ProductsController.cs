@@ -11,32 +11,38 @@ namespace OrderManagementSystem.API.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly OrderManagementContext _context;
-        private readonly Services.ProductService _productService;
+        private readonly Services.IProductService _productService;
 
-        public ProductsController(OrderManagementContext context)
+        public ProductsController(OrderManagementContext context, Services.IProductService productService)
         {
             _context = context;
-            _productService = new Services.ProductService(_context);
+            _productService = productService;
         }
 
         [HttpPost]
-        public async Task<ActionResult<Product>> CreateProduct(Product product)
+        public async Task<ActionResult<Product>> CreateProduct([FromBody] Services.ProductCreateDto dto)
         {
-            if (!ModelState.IsValid || string.IsNullOrWhiteSpace(product.Name))
+            if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
             try
             {
+                var product = await _productService.CreateProductAsync(dto);
                 _context.Products.Add(product);
                 await _context.SaveChangesAsync();
+                return CreatedAtAction(nameof(CreateProduct), new { id = product.Id }, product);
             }
-            catch (ArgumentException ex)
+            catch (ValidationException ex)
             {
-                ModelState.AddModelError("Price", ex.Message);
+                ModelState.AddModelError("Product", ex.Message);
                 return BadRequest(ModelState);
             }
-            return CreatedAtAction(nameof(CreateProduct), new { id = product.Id }, product);
+            catch (ArgumentNullException ex)
+            {
+                ModelState.AddModelError("Product", ex.Message);
+                return BadRequest(ModelState);
+            }
         }
 
         [HttpGet]
@@ -91,7 +97,5 @@ namespace OrderManagementSystem.API.Controllers
                 return BadRequest(ModelState);
             }
         }
-
-
     }
 }

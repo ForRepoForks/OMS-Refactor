@@ -184,14 +184,18 @@ namespace OrderManagementSystem.Tests
             var client = _factory.CreateClient();
 
             // Create products
-            var product1 = new Product { Name = "Apple", Price = 10m };
-            var product2 = new Product { Name = "Banana", Price = 20m, DiscountPercentage = 25m, DiscountQuantityThreshold = 2 };
+            var product1 = new { Name = "Apple", Price = 10m };
+            var product2 = new { Name = "Banana", Price = 20m };
             var resp1 = await client.PostAsJsonAsync("/api/products", product1);
             var resp2 = await client.PostAsJsonAsync("/api/products", product2);
             Assert.Equal(HttpStatusCode.Created, resp1.StatusCode);
             Assert.Equal(HttpStatusCode.Created, resp2.StatusCode);
             var p1 = await resp1.Content.ReadFromJsonAsync<Product>();
             var p2 = await resp2.Content.ReadFromJsonAsync<Product>();
+            // Apply discount to Banana
+            var discount = new { Percentage = 25m, QuantityThreshold = 2 };
+            var discountResp = await client.PutAsJsonAsync($"/api/products/{p2.Id}/discount", discount);
+            Assert.Equal(HttpStatusCode.OK, discountResp.StatusCode);
             Assert.NotNull(p1);
             Assert.NotNull(p2);
 
@@ -327,14 +331,22 @@ namespace OrderManagementSystem.Tests
         {
             await CleanupDatabaseAsync();
             var client = _factory.CreateClient();
-            var prod1 = new Product { Name = "DiscountA", Price = 10m, DiscountPercentage = 10m, DiscountQuantityThreshold = 2 };
-            var prod2 = new Product { Name = "DiscountB", Price = 20m, DiscountPercentage = 15m, DiscountQuantityThreshold = 1 };
-            var resp1 = await client.PostAsJsonAsync("/api/products", prod1);
-            var resp2 = await client.PostAsJsonAsync("/api/products", prod2);
+            // Create products (name and price only)
+            var prod1Create = new { Name = "DiscountA", Price = 10m };
+            var prod2Create = new { Name = "DiscountB", Price = 20m };
+            var resp1 = await client.PostAsJsonAsync("/api/products", prod1Create);
+            var resp2 = await client.PostAsJsonAsync("/api/products", prod2Create);
             Assert.Equal(HttpStatusCode.Created, resp1.StatusCode);
             Assert.Equal(HttpStatusCode.Created, resp2.StatusCode);
             var p1 = await resp1.Content.ReadFromJsonAsync<Product>();
             var p2 = await resp2.Content.ReadFromJsonAsync<Product>();
+            // Apply discounts via endpoint
+            var discount1 = new { Percentage = 10m, QuantityThreshold = 2 };
+            var discount2 = new { Percentage = 15m, QuantityThreshold = 1 };
+            var discountResp1 = await client.PutAsJsonAsync($"/api/products/{p1.Id}/discount", discount1);
+            var discountResp2 = await client.PutAsJsonAsync($"/api/products/{p2.Id}/discount", discount2);
+            Assert.Equal(HttpStatusCode.OK, discountResp1.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, discountResp2.StatusCode);
             var order1 = new { items = new[] { new { productId = p1.Id, quantity = 2 } } };
             var order2 = new { items = new[] { new { productId = p2.Id, quantity = 2 } } };
             await client.PostAsJsonAsync("/api/orders", order1);
@@ -353,10 +365,15 @@ namespace OrderManagementSystem.Tests
         {
             await CleanupDatabaseAsync();
             var client = _factory.CreateClient();
-            var prod = new Product { Name = "BulkDiscount", Price = 5m, DiscountPercentage = 10m, DiscountQuantityThreshold = 2 };
-            var resp = await client.PostAsJsonAsync("/api/products", prod);
+            // Create product (name and price only)
+            var prodCreate = new { Name = "BulkDiscount", Price = 5m };
+            var resp = await client.PostAsJsonAsync("/api/products", prodCreate);
             Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
             var p = await resp.Content.ReadFromJsonAsync<Product>();
+            // Apply discount via endpoint
+            var discountDto = new { Percentage = 10m, QuantityThreshold = 2 };
+            var discountResp = await client.PutAsJsonAsync($"/api/products/{p.Id}/discount", discountDto);
+            Assert.Equal(HttpStatusCode.OK, discountResp.StatusCode);
             for (int i = 0; i < 100; i++)
             {
                 var order = new { items = new[] { new { productId = p.Id, quantity = 2 } } };
