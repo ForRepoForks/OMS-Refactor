@@ -37,7 +37,7 @@ namespace OrderManagementSystem.API.Middleware
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync($"{{\"error\":\"{ex.Message.Replace("\"", "'") }\"}}");
+                await context.Response.WriteAsync($"{{\"error\":\"{ex.Message.Replace("\"", "'")}\"}}");
             }
         }
     }

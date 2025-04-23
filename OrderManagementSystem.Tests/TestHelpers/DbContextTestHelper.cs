@@ -6,6 +6,11 @@ namespace OrderManagementSystem.Tests.TestHelpers
 {
     public static class DbContextTestHelper
     {
+        /// <summary>
+        /// Returns DbContextOptions configured for a real PostgreSQL database using Npgsql.
+        /// This does NOT use an in-memory database. The connection string is taken from the
+        /// OMS_TEST_DB environment variable if set, otherwise a default is used.
+        /// </summary>
         public static DbContextOptions<OrderManagementContext> GetTestDbOptions()
         {
             // Prefer config/environment variable in real CI; fallback to constant for local/dev

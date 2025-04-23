@@ -227,25 +227,16 @@ namespace OrderManagementSystem.Tests
             Assert.Equal("商品名-测试", result.Name);
         }
 
-        // TODO: Enable this duplicate name test when the following are implemented:
-        // 1. Enforce unique product names in the database (add a unique index via EF Core migration)
-        //    and/or add a check in ProductService.CreateProductAsync to throw a ValidationException
-        //    if a product with the same name already exists.
-        // 2. Use a real or EF Core in-memory OrderManagementContext for this test, so that products
-        //    are persisted and uniqueness can be checked across calls.
-        // 3. After adding the unique index, generate and apply the migration to update the schema.
-        // 4. TDD steps: (a) Write/enable this failing test, (b) implement uniqueness check, (c) make test pass.
-        //
-        // [Fact]
-        // public async Task CreateProduct_DuplicateName_ThrowsValidationException()
-        // {
-        //     // Use a real or in-memory context here
-        //     var service = new ProductService(/* real or mock context */);
-        //     var product1 = new Product { Name = "Duplicate", Price = 10m };
-        //     var product2 = new Product { Name = "Duplicate", Price = 20m };
-        //     await service.CreateProductAsync(product1);
-        //     await Assert.ThrowsAsync<ValidationException>(() => service.CreateProductAsync(product2));
-        // }
-
+        [Fact]
+        public async Task CreateProduct_DuplicateName_ThrowsValidationException()
+        {
+            var options = DbContextTestHelper.GetTestDbOptions();
+            using var context = new OrderManagementSystem.API.Data.OrderManagementContext(options);
+            var service = new ProductService(context, GetTestMapper());
+            var dto1 = new ProductCreateDto { Name = "Duplicate", Price = 10m };
+            var dto2 = new ProductCreateDto { Name = "Duplicate", Price = 20m };
+            await service.CreateProductAsync(dto1);
+            await Assert.ThrowsAsync<ValidationException>(() => service.CreateProductAsync(dto2));
+        }
     }
 }
