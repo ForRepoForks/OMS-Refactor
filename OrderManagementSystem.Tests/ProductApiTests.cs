@@ -96,13 +96,74 @@ namespace OrderManagementSystem.Tests
         }
 
         [Fact]
+        public async Task CreateProduct_DuplicateName_ReturnsBadRequest()
+        {
+            await CleanupDatabaseAsync();
+            var client = _factory.CreateClient();
+            var product = new Product { Name = "UniqueProduct", Price = 10m };
+            var response1 = await client.PostAsJsonAsync("/api/products", product);
+            response1.EnsureSuccessStatusCode();
+            var response2 = await client.PostAsJsonAsync("/api/products", product);
+            Assert.Equal(HttpStatusCode.BadRequest, response2.StatusCode);
+        }
+
+        [Fact]
         public async Task ApplyDiscountToNonExistentProduct_ReturnsNotFound()
         {
             await CleanupDatabaseAsync();
             var client = _factory.CreateClient();
-            var discount = new { Percentage = 10, QuantityThreshold = 2 };
-            var response = await client.PutAsJsonAsync($"/api/products/99999/discount", discount);
+            var discount = new { Percentage = 10, QuantityThreshold = 5 };
+            var nonExistentProductId = 99999;
+            var response = await client.PutAsJsonAsync($"/api/products/{nonExistentProductId}/discount", discount);
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetProductById_NonExistent_ReturnsNotFound()
+        {
+            await CleanupDatabaseAsync();
+            var client = _factory.CreateClient();
+            var response = await client.GetAsync("/api/products/99999");
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [Theory]
+        [InlineData(null, 10)]
+        [InlineData(10, null)]
+        [InlineData(null, null)]
+        public async Task ApplyDiscount_MissingFields_ReturnsBadRequest(object percentage, object quantityThreshold)
+        {
+            await CleanupDatabaseAsync();
+            var client = _factory.CreateClient();
+            var newProduct = new Product { Name = "DiscountMissing", Price = 100m };
+            var createResponse = await client.PostAsJsonAsync("/api/products", newProduct);
+            createResponse.EnsureSuccessStatusCode();
+            var created = await createResponse.Content.ReadFromJsonAsync<ProductResponseDto>();
+            var discount = new { Percentage = percentage, QuantityThreshold = quantityThreshold };
+            var discountResponse = await client.PutAsJsonAsync($"/api/products/{created.Id}/discount", discount);
+            Assert.Equal(HttpStatusCode.BadRequest, discountResponse.StatusCode);
+        }
+
+        [Fact]
+        public async Task DeleteProduct_NonExistent_ReturnsNotFound()
+        {
+            await CleanupDatabaseAsync();
+            var client = _factory.CreateClient();
+            var response = await client.DeleteAsync("/api/products/99999");
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [Theory]
+        [InlineData(-1, 10)]
+        [InlineData(0, 10)]
+        [InlineData(1, -1)]
+        [InlineData(1, 0)]
+        public async Task GetProducts_InvalidPagination_ReturnsBadRequest(int page, int pageSize)
+        {
+            await CleanupDatabaseAsync();
+            var client = _factory.CreateClient();
+            var response = await client.GetAsync($"/api/products?page={page}&pageSize={pageSize}");
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
         [Fact]

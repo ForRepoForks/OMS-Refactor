@@ -60,6 +60,11 @@ namespace OrderManagementSystem.API.Services
             if (dto.Price <= 0)
                 throw new ValidationException("Product price must be positive.");
 
+            // Duplicate name check
+            bool exists = await _context.Products.AnyAsync(p => p.Name.ToLower() == name.ToLower());
+            if (exists)
+                throw new ValidationException("A product with this name already exists.");
+
             // Construct Product and catch model-level exceptions
             try
             {

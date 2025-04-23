@@ -19,16 +19,13 @@ This document tracks planned improvements and technical debt for the OMS-Refacto
 
 ## 2. Enforce Unique Product Names and Implement Duplicate Name Validation/Test
 
-**Task:** Enforce unique product names in the database and in ProductService.
+**Status: Completed**
 
-**Steps:**
-1. Add a unique index on the `Product.Name` column via EF Core migration.
-2. Update `ProductService.CreateProductAsync` to check for existing products with the same name and throw a `ValidationException` if found.
-3. Enable and implement the test `CreateProduct_DuplicateName_ThrowsValidationException` in ProductServiceTests.
-4. Use a real `OrderManagementContext` in the test to persist products and verify uniqueness.
-5. Apply the migration to update the schema.
-
-**Note:** The duplicate name test is already present (commented out) in `ProductServiceTests.cs` and should be enabled as soon as the above steps are complete.
+**What was done:**
+- Added a unique index on the `Product.Name` column via EF Core migration.
+- Updated `ProductService.CreateProductAsync` to check for existing products with the same name and throw a `ValidationException` if found.
+- Enabled and validated the test for duplicate names in both integration and service tests.
+- Applied the migration to update the schema.
 
 **Rationale:** Ensures product names are unique and prevents duplicate entries, improving data integrity.
 
@@ -36,14 +33,12 @@ This document tracks planned improvements and technical debt for the OMS-Refacto
 
 ## 3. Review and Improve Test Assertions
 
-**Task:** Review and enhance test assertions in ProductApiTests and related test suites to ensure robust validation of API and business logic.
-
-**Current Status:**
+**Progress:**
+- Expanded edge case and error case coverage in `ProductApiTests` (invalid input, duplicate names, invalid pagination, non-existent entities, etc.).
 - Assertions comprehensively cover HTTP status codes, DTO mapping, business logic, and collection contents.
-- Null checks and collection assertions are consistently used.
-- Negative tests and edge cases (e.g., invalid input, filtering, discount logic) are present.
+- Negative tests and edge cases are present and maintained.
 
-**Suggestions for Improvement:**
+**Suggestions for Further Improvement:**
 1. Add assertions for empty result sets, maximum/minimum field values, and error messages in failed responses.
 2. Validate the full response schema for critical endpoints.
 3. Expand negative testing (e.g., unauthorized access, invalid routes, malformed requests).
