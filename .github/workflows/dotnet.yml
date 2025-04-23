@@ -13,18 +13,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=omsdb;Username=postgres;Password=password"
+      ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=omsdb;Username=omsuser;Password=omspassword"
+      OMS_TEST_DB: "Host=localhost;Port=5432;Database=omsdb;Username=omsuser;Password=omspassword"
     services:
       postgres:
         image: postgres:latest
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
+          POSTGRES_USER: omsuser
+          POSTGRES_PASSWORD: omspassword
           POSTGRES_DB: omsdb
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres"
+          --health-cmd "pg_isready -U omsuser"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
