@@ -10,13 +10,11 @@ namespace OrderManagementSystem.API.Controllers
     [Route("api/[controller]")]
     public class ProductsController : ControllerBase
     {
-        private readonly OrderManagementContext _context;
         private readonly Services.IProductService _productService;
         private readonly AutoMapper.IMapper _mapper;
 
-        public ProductsController(OrderManagementContext context, Services.IProductService productService, AutoMapper.IMapper mapper)
+        public ProductsController(Services.IProductService productService, AutoMapper.IMapper mapper)
         {
-            _context = context;
             _productService = productService;
             _mapper = mapper;
         }
@@ -31,8 +29,6 @@ namespace OrderManagementSystem.API.Controllers
             try
             {
                 var product = await _productService.CreateProductAsync(dto);
-                _context.Products.Add(product);
-                await _context.SaveChangesAsync();
                 var responseDto = _mapper.Map<DTOs.ProductResponseDto>(product);
                 return CreatedAtAction(nameof(CreateProduct), new { id = product.Id }, responseDto);
             }
@@ -50,45 +46,29 @@ namespace OrderManagementSystem.API.Controllers
 
         [HttpGet]
         public async Task<ActionResult<Models.PagedResult<DTOs.ProductResponseDto>>> GetProducts(
-    [FromQuery] string? name,
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 10)
+            [FromQuery] string? name,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
         {
-            if (page < 1 || pageSize < 1 || pageSize > 100)
-                return BadRequest("Invalid pagination parameters.");
-
-            var query = _context.Products.AsQueryable();
-            if (!string.IsNullOrWhiteSpace(name))
+            try
             {
-                query = query.Where(p => p.Name.ToLower().Contains(name.ToLower()));
+                var result = await _productService.GetProductsAsync(name, page, pageSize);
+                return Ok(result);
             }
-            var totalCount = await query.CountAsync();
-            var products = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-            var dtoList = _mapper.Map<List<DTOs.ProductResponseDto>>(products);
-            var result = new Models.PagedResult<DTOs.ProductResponseDto>
+            catch (ValidationException ex)
             {
-                Items = dtoList,
-                TotalCount = totalCount,
-                Page = page,
-                PageSize = pageSize
-            };
-            return Ok(result);
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPut("{id}/discount")]
         public async Task<ActionResult<DTOs.ProductResponseDto>> ApplyDiscount(int id, [FromBody] Services.ProductService.DiscountDto discount)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product == null)
-                return NotFound();
             try
             {
-                await _productService.ApplyDiscountAsync(product, discount);
-                await _context.SaveChangesAsync();
-                var responseDto = _mapper.Map<DTOs.ProductResponseDto>(product);
+                var responseDto = await _productService.ApplyDiscountAsync(id, discount);
+                if (responseDto == null)
+                    return NotFound();
                 return Ok(responseDto);
             }
             catch (System.ComponentModel.DataAnnotations.ValidationException ex)

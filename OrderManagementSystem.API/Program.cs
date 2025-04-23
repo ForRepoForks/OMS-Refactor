@@ -14,7 +14,12 @@ namespace OrderManagementSystem.API
             builder.Services.AddDbContext<OrderManagementSystem.API.Data.OrderManagementContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            builder.Services.AddScoped<OrderManagementSystem.API.Services.IProductService, OrderManagementSystem.API.Services.ProductService>();
+            builder.Services.AddScoped<OrderManagementSystem.API.Services.IProductService, OrderManagementSystem.API.Services.ProductService>(provider =>
+            {
+                var context = provider.GetRequiredService<OrderManagementSystem.API.Data.OrderManagementContext>();
+                var mapper = provider.GetRequiredService<AutoMapper.IMapper>();
+                return new OrderManagementSystem.API.Services.ProductService(context, mapper);
+            });
             builder.Services.AddScoped<OrderManagementSystem.API.Services.IOrderService, OrderManagementSystem.API.Services.OrderService>();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

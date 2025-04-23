@@ -64,22 +64,5 @@ namespace OrderManagementSystem.Tests
             Assert.Contains(createdOrder.Items, i => i.ProductId == product1.Id && i.Quantity == 2);
             Assert.Contains(createdOrder.Items, i => i.ProductId == product2.Id && i.Quantity == 3);
         }
-        [Fact(DisplayName = "OrderService.CreateOrderAsync should require EF Core async extensions (ToListAsync)")]
-        public void CreateOrderAsync_ShouldRequireEfCoreAsyncExtensions()
-        {
-            // This test is inconclusive at runtime because missing ToListAsync is a compile-time error.
-            // If 'using Microsoft.EntityFrameworkCore;' is missing or EF Core is not referenced, this will not compile.
-            // This test documents the TDD intent: OrderService.CreateOrderAsync must use EF Core async extensions.
-            Assert.True(true, "Compile-time error expected if EF Core async extension is missing");
-        }
-
-        [Fact(DisplayName = "EF Core and Npgsql versions must be compatible (TDD)")]
-        public void EfCoreAndNpgsqlVersions_ShouldBeCompatible()
-        {
-            // This test is inconclusive at runtime but documents the TDD requirement:
-            // All projects must use compatible versions of Microsoft.EntityFrameworkCore and Npgsql.EntityFrameworkCore.PostgreSQL.
-            // Mismatched versions (e.g., EF Core 8 with EF Core 9) will cause runtime TypeLoadException.
-            Assert.True(true, "EF Core and Npgsql versions must be compatible (see csproj)");
-        }
     }
 }
