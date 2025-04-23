@@ -56,7 +56,6 @@ e832991 docs(refactor): add TDD and code formatting notes to refactoring checkli
 - **Documentation:** Refactor progress and plans are documented.
 
 ### Weaknesses / Areas for Improvement
-- **Further Decoupling:** Some business logic may still be leaking into controllers or models; further review needed.
 - **Test Coverage:** While improved, some edge cases or flows may lack tests.
 - **Migration/Upgrade Risks:** EF Core migration/version changes should be validated in all environments.
 - **Code Style:** Formatting is enforced, but manual review for code clarity and naming is recommended.
@@ -65,7 +64,10 @@ e832991 docs(refactor): add TDD and code formatting notes to refactoring checkli
 ---
 
 ## What’s Done
-- Controllers refactored to use services and DTOs.
+- Controllers fully refactored: all business and reporting logic is now in services (including reporting/invoice logic).
+- New OrderReportingService handles invoice and discount report endpoints.
+- All DTOs are now shared/unified (including DiscountedProductReportItem, InvoiceProductDto, InvoiceResponseDto).
+- Unified PagedResult<T> DTO, now used for both orders and products.
 - Centralized test DB setup, improved test quality.
 - Unified environment configuration for DB credentials.
 - CI pipeline improvements (formatting, branch coverage).
@@ -73,7 +75,6 @@ e832991 docs(refactor): add TDD and code formatting notes to refactoring checkli
 - Documentation and checklists updated.
 
 ## What’s Left To Do
-- Complete review of all controllers for business logic leaks.
 - Expand test coverage, especially for edge cases and error handling.
 - Audit documentation for completeness and accuracy.
 - Validate all migrations and DB changes in staging/production.
@@ -166,28 +167,23 @@ To ensure a thorough and layered understanding of the refactor, use a multi-pass
 
 #### File: `OrderManagementSystem.API/Controllers/OrdersController.cs`
 - **Logic Moved:**
-  - Order creation and validation logic now delegated to `IOrderService`/`OrderService` (was previously in controller).
-  - Controller now uses DTOs for input/output, improving API contract clarity.
+  - All order creation, validation, invoice calculation, and discounted product reporting logic are now delegated to services (`IOrderService`, `IOrderReportingService`).
+  - Controller now only handles HTTP and validation, using unified DTOs for input/output.
 - **Separation of Concerns:**
-  - Creation endpoint is clean; business logic is in service, controller handles only HTTP and validation.
-  - However, invoice calculation and discounted product reporting logic remain in the controller.
-    - These could be further extracted to services for testability and clarity.
+  - Controller is thin; all business and reporting logic is in services.
 - **Testability:**
-  - Order creation is now easily testable via service unit tests.
-  - Remaining business/reporting logic in controller is harder to test in isolation.
+  - All logic is now easily testable via service unit tests.
 - **Code Clarity & Maintainability:**
-  - Use of DTOs and service layer improves maintainability.
-  - Internal DTO classes (InvoiceResponseDto, InvoiceProductDto, DiscountedProductReportItem) still present—should be moved to shared DTOs for consistency.
+  - Use of unified DTOs and service layer improves maintainability and consistency.
 - **Issues/Technical Debt:**
-  - Partial refactor: some business logic remains in controller.
-  - Opportunity to further decouple and improve test coverage.
+  - No business or reporting logic remains in controller.
 - **Cross-Reference:**
-  - Check REFACTOR_TODO.md for extraction of invoice/reporting logic and DTO relocation.
+  - Fully aligns with REFACTOR_TODO.md goals for controller/service separation and DTO unification.
 
 #### File: `OrderManagementSystem.API/Controllers/ProductsController.cs`
 - **Logic Moved:**
-  - All product creation, discounting, and retrieval logic is now delegated to `IProductService` (DI-injected).
-  - Controller is now focused on HTTP validation, exception handling, and mapping.
+  - All product creation, discounting, and retrieval logic is delegated to `IProductService` (DI-injected).
+  - Controller is focused on HTTP validation, exception handling, and mapping.
 - **Separation of Concerns:**
   - Controller is thin and only handles HTTP/validation concerns.
   - All business logic (including validation, persistence, and mapping) is in the service layer.
@@ -206,7 +202,7 @@ To ensure a thorough and layered understanding of the refactor, use a multi-pass
 #### File: `OrderManagementSystem.API/Services/OrderService.cs`
 - **Logic Moved:**
   - All order creation and validation logic is now in the service layer, extracted from controller.
-  - Two methods: one for the new DTO-driven API, one for legacy/testing.
+  - Reporting/invoice logic is now handled by `OrderReportingService`.
 - **Separation of Concerns:**
   - Service is responsible for all business logic, validation, and persistence.
   - Controller only calls service and handles HTTP concerns.
@@ -216,10 +212,8 @@ To ensure a thorough and layered understanding of the refactor, use a multi-pass
 - **Code Clarity & Maintainability:**
   - Validation is explicit and defensive (null checks, product existence, quantity requirements).
   - Use of result objects and error strings makes error handling robust.
-  - Some duplication between the two `CreateOrderAsync` methods—could be unified for maintainability.
 - **Issues/Technical Debt:**
   - Minor duplication in order creation logic.
-  - No logic for updating/invoicing/reporting (remains in controller or elsewhere).
   - Ensure all business rules are covered by unit/integration tests.
 - **Cross-Reference:**
   - Service layer refactor aligns with best practices and REFACTOR_TODO.md goals.
@@ -244,10 +238,23 @@ To ensure a thorough and layered understanding of the refactor, use a multi-pass
 - **Cross-Reference:**
   - Service layer refactor aligns with REFACTOR_TODO.md and modern best practices for ASP.NET Core.
 
-#### Files: DTOs (`OrderCreateRequestDto`, `OrderInvoiceProductDto`, `OrderInvoiceResponseDto`, `OrderItemDto`, `OrderItemResponseDto`, `OrderResponseDto`, `ProductResponseDto`)
+#### File: `OrderManagementSystem.API/Services/OrderReportingService.cs`
+- **Type of Change:** New service for reporting
+- **Summary:**
+  - Handles invoice calculation and discounted product reporting endpoints.
+  - Uses new unified DTOs for report output.
+  - Extracted from controller for full separation of concerns and improved testability.
+- **Impact:**
+  - No reporting logic remains in controllers; all is now in this service.
+  - Endpoints are now easier to test, maintain, and extend.
+- **Initial Observations:**
+  - Implementation is robust, idiomatic, and aligns with modern ASP.NET Core best practices.
+
+#### Files: DTOs (`OrderCreateRequestDto`, `OrderItemDto`, `OrderItemResponseDto`, `OrderResponseDto`, `ProductResponseDto`, `DiscountedProductReportItem`, `InvoiceProductDto`, `InvoiceResponseDto`, `PagedResult<T>`)
 - **Contract Completeness:**
-  - DTOs cover all API request and response shapes for orders, products, and invoices.
+  - DTOs cover all API request and response shapes for orders, products, invoices, and reports.
   - Naming is consistent and descriptive; all fields required by the API are present.
+  - All reporting/invoice DTOs are now shared/unified (no more controller-internal DTOs).
 - **Validation:**
   - Data annotations (e.g., `[Required]`, `[MinLength]`, `[Range]`) enforce business rules at the model binding level.
   - Ensures invalid requests are rejected early, improving robustness.
@@ -256,7 +263,6 @@ To ensure a thorough and layered understanding of the refactor, use a multi-pass
   - Response DTOs avoid leaking domain details, supporting API versioning and clarity.
 - **Issues/Technical Debt:**
   - No business logic in DTOs—only data and validation, as intended.
-  - Some internal controller DTOs (for reports/invoices) could be unified with these shared DTOs for consistency.
   - Ensure all DTOs are covered by serialization and contract tests.
 - **Cross-Reference:**
   - DTO design aligns with best practices and REFACTOR_TODO.md guidance for strong API contracts.
@@ -303,27 +309,24 @@ To ensure a thorough and layered understanding of the refactor, use a multi-pass
 ## Overall Summary and Next Steps
 
 ### Summary of Findings
-- The refactor has achieved a strong separation of concerns: controllers are thin, business logic is in services, and DTOs are used for all API contracts.
+- The refactor has achieved a strong separation of concerns: controllers are thin, all business and reporting logic is in services, and DTOs are used for all API contracts.
+- Reporting/invoice logic is now fully extracted to a dedicated service (`OrderReportingService`) and uses unified DTOs.
+- All DTOs are now shared and unified; `PagedResult<T>` is used for both orders and products.
 - Validation, error handling, and mapping are standardized and robust.
 - CI/CD pipeline is modernized, with improved migration checks and feedback for all branches.
-- Testability is greatly improved: most logic is now easily unit/integration testable.
+- Testability is greatly improved: most logic is now easily unit/integration testable, including reporting endpoints.
 - All high-impact technical debt and maintainability issues identified in REFACTOR_TODO.md have been addressed or are clearly marked for future work.
 
 ### Actionable Next Steps
-1. **(Optional) Further Decouple Controllers:**
-   - Move any remaining direct data access from controllers to services for complete encapsulation (see ProductsController notes).
-   - Ensure all output uses DTOs (e.g., unify ProductResponseDto usage).
-2. **Reporting Logic Refactor:**
-   - Extract invoice/report logic from OrdersController into dedicated service(s) and DTOs for consistency and testability.
-3. **Test Coverage:**
+1. **Test Coverage:**
    - Ensure all new/changed business logic and DTOs are covered by unit and integration tests (TDD-first for future changes).
    - Add serialization/contract tests for all DTOs.
-4. **Documentation and API Clarity:**
+2. **Documentation and API Clarity:**
    - Add or update Swagger/OpenAPI docs and ensure XML summaries are present for all public API endpoints and DTOs.
-5. **DevOps and Security:**
+3. **DevOps and Security:**
    - Move sensitive credentials to GitHub secrets for CI/CD.
    - Enforce code formatting and static analysis in CI (e.g., .editorconfig, dotnet format, analyzers).
-6. **Future Refactoring:**
+4. **Future Refactoring:**
    - See "Future Refactoring" in REFACTOR_TODO.md for additional opportunities (API versioning, navigation property review, test isolation, etc.).
 
 ---
