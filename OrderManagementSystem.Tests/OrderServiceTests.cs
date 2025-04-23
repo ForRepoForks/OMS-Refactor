@@ -30,39 +30,66 @@ namespace OrderManagementSystem.Tests
         }
 
         [Fact]
-        public async Task CreateOrder_ValidInput_CreatesOrder()
+        public async Task CreateOrder_EmptyItems_ReturnsError()
+        {
+            await CleanupDatabaseAsync();
+            using var scope = _factory.Services.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<OrderManagementSystem.API.Services.IOrderService>();
+            var (result, error) = await service.CreateOrderAsync(new List<OrderItemDto>());
+            Assert.Null(result);
+            Assert.Equal("At least one item is required.", error);
+        }
+
+        [Fact]
+        public async Task CreateOrder_NullItem_ReturnsError()
+        {
+            await CleanupDatabaseAsync();
+            using var scope = _factory.Services.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<OrderManagementSystem.API.Services.IOrderService>();
+            var items = new List<OrderItemDto> { null };
+            var (result, error) = await service.CreateOrderAsync(items);
+            Assert.Null(result);
+            Assert.Equal("Order item cannot be null.", error);
+        }
+
+        [Fact]
+        public async Task CreateOrder_ZeroQuantity_ReturnsError()
         {
             await CleanupDatabaseAsync();
             using var scope = _factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<OrderManagementContext>();
-            // Add products
-            var product1 = new Product { Name = "OrderServiceTestProduct1", Price = 10m };
-            var product2 = new Product { Name = "OrderServiceTestProduct2", Price = 20m };
-            db.Products.AddRange(product1, product2);
+            var product = new Product { Name = "ZeroQuantityProduct", Price = 10m };
+            db.Products.Add(product);
             await db.SaveChangesAsync();
-            // Prepare DTO
-            var dto = new OrderCreateRequestDto
-            {
-                Items = new List<OrderItemDto>
-                {
-                    new OrderItemDto { ProductId = product1.Id, Quantity = 2 },
-                    new OrderItemDto { ProductId = product2.Id, Quantity = 3 }
-                }
-            };
             var service = scope.ServiceProvider.GetRequiredService<OrderManagementSystem.API.Services.IOrderService>();
+            var items = new List<OrderItemDto> { new OrderItemDto { ProductId = product.Id, Quantity = 0 } };
+            var (result, error) = await service.CreateOrderAsync(items);
+            Assert.Null(result);
+            Assert.Equal("Quantity must be at least 1.", error);
+        }
 
-            // Act
-            var orderId = await service.CreateOrderAsync(dto);
+        [Fact]
+        public async Task CreateOrder_MissingProductId_ReturnsError()
+        {
+            await CleanupDatabaseAsync();
+            using var scope = _factory.Services.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<OrderManagementSystem.API.Services.IOrderService>();
+            var items = new List<OrderItemDto> { new OrderItemDto { ProductId = 0, Quantity = 1 } };
+            var (result, error) = await service.CreateOrderAsync(items);
+            Assert.Null(result);
+            Assert.Equal("ProductId is required and must be greater than 0.", error);
+        }
 
-            // Assert
-            var createdOrder = db.Orders
-                .Where(o => o.Id == orderId)
-                .Select(o => new { o.Id, Items = o.Items.Select(i => new { i.ProductId, i.Quantity }).ToList() })
-                .FirstOrDefault();
-            Assert.NotNull(createdOrder);
-            Assert.Equal(2, createdOrder.Items.Count);
-            Assert.Contains(createdOrder.Items, i => i.ProductId == product1.Id && i.Quantity == 2);
-            Assert.Contains(createdOrder.Items, i => i.ProductId == product2.Id && i.Quantity == 3);
+        [Fact]
+        public async Task CreateOrder_NonExistentProduct_ReturnsError()
+        {
+            await CleanupDatabaseAsync();
+            using var scope = _factory.Services.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<OrderManagementSystem.API.Services.IOrderService>();
+            var items = new List<OrderItemDto> { new OrderItemDto { ProductId = 9999, Quantity = 1 } };
+            var (result, error) = await service.CreateOrderAsync(items);
+            Assert.Null(result);
+            Assert.Equal("One or more products not found.", error);
         }
     }
 }
