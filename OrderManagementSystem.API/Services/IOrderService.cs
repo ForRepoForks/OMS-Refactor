@@ -7,7 +7,7 @@ namespace OrderManagementSystem.API.Services
     {
         Task<int> CreateOrderAsync(OrderCreateRequestDto dto);
 
-        // New method for controller extraction
         Task<(OrderService.OrderResult? Result, string? Error)> CreateOrderAsync(List<OrderItemDto> items);
+        Task<PagedResult<OrderResponseDto>> GetOrdersAsync(int page, int pageSize);
     }
 }

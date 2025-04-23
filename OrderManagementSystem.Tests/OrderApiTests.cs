@@ -173,7 +173,7 @@ namespace OrderManagementSystem.Tests
             var client = _factory.CreateClient();
             var response = await client.GetAsync("/api/orders");
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            var paged = await response.Content.ReadFromJsonAsync<PagedResult<OrderResponse>>();
+            var paged = await response.Content.ReadFromJsonAsync<OrderManagementSystem.API.DTOs.PagedResult<OrderResponse>>();
             Assert.NotNull(paged);
             Assert.NotNull(paged.Items);
             Assert.Empty(paged.Items);
@@ -295,7 +295,7 @@ namespace OrderManagementSystem.Tests
             // Act
             var response = await client.GetAsync("/api/orders");
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            var paged = await response.Content.ReadFromJsonAsync<PagedResult<OrderResponse>>();
+            var paged = await response.Content.ReadFromJsonAsync<OrderManagementSystem.API.DTOs.PagedResult<OrderResponse>>();
             Assert.NotNull(paged);
             Assert.NotNull(paged.Items);
             Assert.True(paged.Items.Count == 2); // Should only be the two we created

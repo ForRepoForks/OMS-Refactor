@@ -1,4 +1,6 @@
-namespace OrderManagementSystem.API.Models
+using System.Collections.Generic;
+
+namespace OrderManagementSystem.API.DTOs
 {
     public class PagedResult<T>
     {

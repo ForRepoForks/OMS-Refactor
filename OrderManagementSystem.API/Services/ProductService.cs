@@ -73,7 +73,7 @@ namespace OrderManagementSystem.API.Services
                 throw new ValidationException(ex.Message, ex);
             }
         }
-        public async Task<PagedResult<DTOs.ProductResponseDto>> GetProductsAsync(string? name, int page, int pageSize)
+        public async Task<OrderManagementSystem.API.DTOs.PagedResult<DTOs.ProductResponseDto>> GetProductsAsync(string? name, int page, int pageSize)
         {
             if (page < 1 || pageSize < 1 || pageSize > 100)
                 throw new ValidationException("Invalid pagination parameters.");
@@ -89,7 +89,7 @@ namespace OrderManagementSystem.API.Services
                 .Take(pageSize)
                 .ToListAsync();
             var dtoList = _mapper.Map<List<DTOs.ProductResponseDto>>(products);
-            return new PagedResult<DTOs.ProductResponseDto>
+            return new OrderManagementSystem.API.DTOs.PagedResult<DTOs.ProductResponseDto>
             {
                 Items = dtoList,
                 TotalCount = totalCount,

@@ -73,5 +73,34 @@ namespace OrderManagementSystem.API.Services
             };
             return (result, null);
         }
+        public async Task<PagedResult<OrderResponseDto>> GetOrdersAsync(int page, int pageSize)
+        {
+            if (page < 1 || pageSize < 1 || pageSize > 100)
+                throw new ArgumentException("Invalid pagination parameters.");
+
+            var query = _context.Orders.Include(o => o.Items).AsQueryable();
+            var totalCount = await query.CountAsync();
+            var orders = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = new PagedResult<OrderResponseDto>
+            {
+                Items = orders.Select(o => new OrderResponseDto
+                {
+                    Id = o.Id,
+                    Items = o.Items.Select(i => new OrderItemResponseDto
+                    {
+                        ProductId = i.ProductId,
+                        Quantity = i.Quantity
+                    }).ToList()
+                }).ToList(),
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
+            return result;
+        }
     }
 }

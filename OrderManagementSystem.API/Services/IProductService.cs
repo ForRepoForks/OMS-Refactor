@@ -6,7 +6,7 @@ namespace OrderManagementSystem.API.Services
     public interface IProductService
     {
         Task<Product> CreateProductAsync(ProductCreateDto dto);
-        Task<PagedResult<DTOs.ProductResponseDto>> GetProductsAsync(string? name, int page, int pageSize);
+        Task<OrderManagementSystem.API.DTOs.PagedResult<DTOs.ProductResponseDto>> GetProductsAsync(string? name, int page, int pageSize);
         Task<DTOs.ProductResponseDto?> ApplyDiscountAsync(int id, ProductService.DiscountDto discount);
     }
 }

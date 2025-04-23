@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderManagementSystem.API.Data;
-using OrderManagementSystem.API.Models;
+
 using System.ComponentModel.DataAnnotations;
+using OrderManagementSystem.API.Models;
 
 namespace OrderManagementSystem.API.Controllers
 {
@@ -45,7 +46,7 @@ namespace OrderManagementSystem.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<Models.PagedResult<DTOs.ProductResponseDto>>> GetProducts(
+        public async Task<ActionResult<OrderManagementSystem.API.DTOs.PagedResult<DTOs.ProductResponseDto>>> GetProducts(
             [FromQuery] string? name,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)

@@ -163,7 +163,7 @@ namespace OrderManagementSystem.Tests
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            var paged = await response.Content.ReadFromJsonAsync<PagedResult<ProductResponseDto>>();
+            var paged = await response.Content.ReadFromJsonAsync<OrderManagementSystem.API.DTOs.PagedResult<ProductResponseDto>>();
             Assert.NotNull(paged);
             Assert.NotNull(paged.Items);
             Assert.Contains(paged.Items, p => p.Id == created.Id && p.Name == newProduct.Name && p.Price == newProduct.Price);
@@ -195,7 +195,7 @@ namespace OrderManagementSystem.Tests
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            var paged = await response.Content.ReadFromJsonAsync<PagedResult<ProductResponseDto>>();
+            var paged = await response.Content.ReadFromJsonAsync<OrderManagementSystem.API.DTOs.PagedResult<ProductResponseDto>>();
             Assert.NotNull(paged);
             Assert.NotNull(paged.Items);
             Assert.All(paged.Items, p => Assert.True(p.Name.IndexOf("Apple", System.StringComparison.OrdinalIgnoreCase) >= 0));

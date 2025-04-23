@@ -21,6 +21,7 @@ namespace OrderManagementSystem.API
                 return new OrderManagementSystem.API.Services.ProductService(context, mapper);
             });
             builder.Services.AddScoped<OrderManagementSystem.API.Services.IOrderService, OrderManagementSystem.API.Services.OrderService>();
+            builder.Services.AddScoped<OrderManagementSystem.API.Services.IOrderReportingService, OrderManagementSystem.API.Services.OrderReportingService>();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
