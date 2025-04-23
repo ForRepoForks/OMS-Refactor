@@ -3,7 +3,7 @@ using System;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace OrderManagementSystem.API
+namespace OrderManagementSystem.API.Middleware
 {
     /// <summary>
     /// Middleware that catches ArgumentException thrown during request processing (including model binding)
@@ -42,3 +42,4 @@ namespace OrderManagementSystem.API
         }
     }
 }
+

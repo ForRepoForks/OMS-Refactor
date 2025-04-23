@@ -41,7 +41,7 @@ namespace OrderManagementSystem.API
             app.UseHttpsRedirection();
 
             // Register ArgumentExceptionMiddleware before controllers
-            app.UseMiddleware<OrderManagementSystem.API.ArgumentExceptionMiddleware>();
+            app.UseMiddleware<OrderManagementSystem.API.Middleware.ArgumentExceptionMiddleware>();
 
             app.UseAuthorization();
 
