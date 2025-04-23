@@ -3,7 +3,7 @@ using System;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace OrderManagementSystem.API
+namespace OrderManagementSystem.API.Middleware
 {
     /// <summary>
     /// Middleware that catches ArgumentException thrown during request processing (including model binding)
@@ -37,8 +37,9 @@ namespace OrderManagementSystem.API
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync($"{{\"error\":\"{ex.Message.Replace("\"", "'")}\"}}");
+                await context.Response.WriteAsync($"{{\"error\":\"{ex.Message.Replace("\"", "'") }\"}}");
             }
         }
     }
 }
+
