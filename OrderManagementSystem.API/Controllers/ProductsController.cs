@@ -12,15 +12,17 @@ namespace OrderManagementSystem.API.Controllers
     {
         private readonly OrderManagementContext _context;
         private readonly Services.IProductService _productService;
+        private readonly AutoMapper.IMapper _mapper;
 
-        public ProductsController(OrderManagementContext context, Services.IProductService productService)
+        public ProductsController(OrderManagementContext context, Services.IProductService productService, AutoMapper.IMapper mapper)
         {
             _context = context;
             _productService = productService;
+            _mapper = mapper;
         }
 
         [HttpPost]
-        public async Task<ActionResult<Product>> CreateProduct([FromBody] Services.ProductCreateDto dto)
+        public async Task<ActionResult<DTOs.ProductResponseDto>> CreateProduct([FromBody] Services.ProductCreateDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -31,7 +33,8 @@ namespace OrderManagementSystem.API.Controllers
                 var product = await _productService.CreateProductAsync(dto);
                 _context.Products.Add(product);
                 await _context.SaveChangesAsync();
-                return CreatedAtAction(nameof(CreateProduct), new { id = product.Id }, product);
+                var responseDto = _mapper.Map<DTOs.ProductResponseDto>(product);
+                return CreatedAtAction(nameof(CreateProduct), new { id = product.Id }, responseDto);
             }
             catch (ValidationException ex)
             {
@@ -46,7 +49,7 @@ namespace OrderManagementSystem.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<PagedResult<Product>>> GetProducts(
+        public async Task<ActionResult<Models.PagedResult<DTOs.ProductResponseDto>>> GetProducts(
     [FromQuery] string? name,
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 10)
@@ -64,9 +67,10 @@ namespace OrderManagementSystem.API.Controllers
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
-            var result = new PagedResult<Product>
+            var dtoList = _mapper.Map<List<DTOs.ProductResponseDto>>(products);
+            var result = new Models.PagedResult<DTOs.ProductResponseDto>
             {
-                Items = products,
+                Items = dtoList,
                 TotalCount = totalCount,
                 Page = page,
                 PageSize = pageSize
@@ -75,7 +79,7 @@ namespace OrderManagementSystem.API.Controllers
         }
 
         [HttpPut("{id}/discount")]
-        public async Task<ActionResult<Product>> ApplyDiscount(int id, [FromBody] Services.ProductService.DiscountDto discount)
+        public async Task<ActionResult<DTOs.ProductResponseDto>> ApplyDiscount(int id, [FromBody] Services.ProductService.DiscountDto discount)
         {
             var product = await _context.Products.FindAsync(id);
             if (product == null)
@@ -84,7 +88,8 @@ namespace OrderManagementSystem.API.Controllers
             {
                 await _productService.ApplyDiscountAsync(product, discount);
                 await _context.SaveChangesAsync();
-                return Ok(product);
+                var responseDto = _mapper.Map<DTOs.ProductResponseDto>(product);
+                return Ok(responseDto);
             }
             catch (System.ComponentModel.DataAnnotations.ValidationException ex)
             {

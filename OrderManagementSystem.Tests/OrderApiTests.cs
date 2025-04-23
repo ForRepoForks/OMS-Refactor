@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using OrderManagementSystem.API.Models;
 using OrderManagementSystem.API.DTOs;
+using OrderManagementSystem.API.DTOs;
 using Xunit;
 
 namespace OrderManagementSystem.Tests
@@ -41,8 +42,8 @@ namespace OrderManagementSystem.Tests
             var resp2 = await client.PostAsJsonAsync("/api/products", p2);
             Assert.Equal(HttpStatusCode.Created, resp1.StatusCode);
             Assert.Equal(HttpStatusCode.Created, resp2.StatusCode);
-            var prod1 = await resp1.Content.ReadFromJsonAsync<Product>();
-            var prod2 = await resp2.Content.ReadFromJsonAsync<Product>();
+            var prod1 = await resp1.Content.ReadFromJsonAsync<ProductResponseDto>();
+            var prod2 = await resp2.Content.ReadFromJsonAsync<ProductResponseDto>();
             Assert.NotNull(prod1);
             Assert.NotNull(prod2);
 
@@ -107,7 +108,7 @@ namespace OrderManagementSystem.Tests
             // First, create a valid product
             var productResp = await client.PostAsJsonAsync("/api/products", new Product { Name = "Test Product", Price = 1.00m });
             Assert.Equal(HttpStatusCode.Created, productResp.StatusCode);
-            var product = await productResp.Content.ReadFromJsonAsync<Product>();
+            var product = await productResp.Content.ReadFromJsonAsync<ProductResponseDto>();
             Assert.NotNull(product);
             var orderRequest = new OrderCreateRequestDto { Items = new List<OrderItemDto> { new OrderItemDto { ProductId = product.Id } } };
             var response = await client.PostAsJsonAsync("/api/orders", orderRequest);
@@ -124,7 +125,7 @@ namespace OrderManagementSystem.Tests
             // First, create a valid product
             var productResp = await client.PostAsJsonAsync("/api/products", new Product { Name = "Test Product", Price = 1.00m });
             Assert.Equal(HttpStatusCode.Created, productResp.StatusCode);
-            var product = await productResp.Content.ReadFromJsonAsync<Product>();
+            var product = await productResp.Content.ReadFromJsonAsync<ProductResponseDto>();
             Assert.NotNull(product);
             var orderRequest = new OrderCreateRequestDto { Items = new List<OrderItemDto> { new OrderItemDto { ProductId = product.Id, Quantity = quantity } } };
             var response = await client.PostAsJsonAsync("/api/orders", orderRequest);
@@ -191,8 +192,8 @@ namespace OrderManagementSystem.Tests
             var resp2 = await client.PostAsJsonAsync("/api/products", product2);
             Assert.Equal(HttpStatusCode.Created, resp1.StatusCode);
             Assert.Equal(HttpStatusCode.Created, resp2.StatusCode);
-            var p1 = await resp1.Content.ReadFromJsonAsync<Product>();
-            var p2 = await resp2.Content.ReadFromJsonAsync<Product>();
+            var p1 = await resp1.Content.ReadFromJsonAsync<ProductResponseDto>();
+            var p2 = await resp2.Content.ReadFromJsonAsync<ProductResponseDto>();
             // Apply discount to Banana
             var discount = new { Percentage = 25m, QuantityThreshold = 2 };
             var discountResp = await client.PutAsJsonAsync($"/api/products/{p2.Id}/discount", discount);
@@ -272,8 +273,8 @@ namespace OrderManagementSystem.Tests
             var resp2 = await client.PostAsJsonAsync("/api/products", p2);
             Assert.Equal(HttpStatusCode.Created, resp1.StatusCode);
             Assert.Equal(HttpStatusCode.Created, resp2.StatusCode);
-            var prod1 = await resp1.Content.ReadFromJsonAsync<Product>();
-            var prod2 = await resp2.Content.ReadFromJsonAsync<Product>();
+            var prod1 = await resp1.Content.ReadFromJsonAsync<ProductResponseDto>();
+            var prod2 = await resp2.Content.ReadFromJsonAsync<ProductResponseDto>();
             Assert.NotNull(prod1);
             Assert.NotNull(prod2);
 
@@ -317,7 +318,7 @@ namespace OrderManagementSystem.Tests
             var prod = new Product { Name = "NoDiscount", Price = 50m };
             var resp = await client.PostAsJsonAsync("/api/products", prod);
             Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
-            var order = new { items = new[] { new { productId = (await resp.Content.ReadFromJsonAsync<Product>()).Id, quantity = 2 } } };
+            var order = new { items = new[] { new { productId = (await resp.Content.ReadFromJsonAsync<ProductResponseDto>()).Id, quantity = 2 } } };
             var respOrder = await client.PostAsJsonAsync("/api/orders", order);
             Assert.Equal(HttpStatusCode.Created, respOrder.StatusCode);
             var response = await client.GetAsync("/api/reports/discounted-products");
@@ -339,8 +340,8 @@ namespace OrderManagementSystem.Tests
             var resp2 = await client.PostAsJsonAsync("/api/products", prod2Create);
             Assert.Equal(HttpStatusCode.Created, resp1.StatusCode);
             Assert.Equal(HttpStatusCode.Created, resp2.StatusCode);
-            var p1 = await resp1.Content.ReadFromJsonAsync<Product>();
-            var p2 = await resp2.Content.ReadFromJsonAsync<Product>();
+            var p1 = await resp1.Content.ReadFromJsonAsync<ProductResponseDto>();
+            var p2 = await resp2.Content.ReadFromJsonAsync<ProductResponseDto>();
             // Apply discounts via endpoint
             var discount1 = new { Percentage = 10m, QuantityThreshold = 2 };
             var discount2 = new { Percentage = 15m, QuantityThreshold = 1 };
@@ -370,7 +371,7 @@ namespace OrderManagementSystem.Tests
             var prodCreate = new { Name = "BulkDiscount", Price = 5m };
             var resp = await client.PostAsJsonAsync("/api/products", prodCreate);
             Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
-            var p = await resp.Content.ReadFromJsonAsync<Product>();
+            var p = await resp.Content.ReadFromJsonAsync<ProductResponseDto>();
             // Apply discount via endpoint
             var discountDto = new { Percentage = 10m, QuantityThreshold = 2 };
             var discountResp = await client.PutAsJsonAsync($"/api/products/{p.Id}/discount", discountDto);
@@ -394,7 +395,7 @@ namespace OrderManagementSystem.Tests
         {
             await CleanupDatabaseAsync();
             var client = _factory.CreateClient();
-            var orderRequest = new OrderCreateRequestDto { Items = null };
+            var orderRequest = new OrderCreateRequestDto { Items = new List<OrderItemDto>() };
             var response = await client.PostAsJsonAsync("/api/orders", orderRequest);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             var content = await response.Content.ReadAsStringAsync();
